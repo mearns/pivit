@@ -27,12 +27,7 @@ function pivit () {
     let x = hPad
     let y = vPad
     for (let i = 0; i < tiles.length; i++) {
-      tileGeometries[i] = [
-        [x, y],
-        [x + tileWidth, y],
-        [x + tileWidth, y + tileHeight],
-        [x, y + tileHeight]
-      ]
+      tileGeometries[i] = [x, y, tileWidth, tileHeight]
       x += tileWidth
     }
   }
@@ -49,15 +44,14 @@ function pivit () {
   function calculateSelections (event) {
     const rect = canvas.getBoundingClientRect()
     const x = event.clientX - rect.left
+    const y = event.clientY - rect.top
     selectedTile = null
     selectedSide = null
-    // const y = event.clientY - rect.top
     for (let i = 0; i < tileGeometries.length; i++) {
-      // FIXME: proper collision detection for non-rectangles
-      const tileLeft = tileGeometries[i][0][0]
-      const tileRight = tileGeometries[i][1][0]
-      if (x >= tileLeft && x < tileRight) {
-        if (x < tileLeft + tileWidth / 2) {
+      const [left, top, tw, th] = tileGeometries[i]
+      const right = left + tw
+      if (x >= left && x < right && y >= top && y < top + th) {
+        if (x < left + tileWidth / 2) {
           selectedSide = 'left'
         } else {
           selectedSide = 'right'
@@ -109,35 +103,24 @@ function renderTiles (canvas, tiles, colors, tileGeometries, selectedTile, selec
   ctx.clearRect(0, 0, width, height)
 
   ctx.save()
-  ctx.translate(...tileGeometries[3][0])
-  if (rotate) {
-    ctx.rotate(Math.PI / 3)
-  }
-  ctx.translate(-tileGeometries[3][0][0], -tileGeometries[3][0][1])
-
   ctx.lineWidth = 1
   for (let i = 0; i < tiles.length; i++) {
     const tile = tiles[i]
     const tileColor = colors[tile]
 
-    const [firstPoint, ...points] = tileGeometries[i]
-    ctx.beginPath()
-    ctx.moveTo(...firstPoint)
-    points.forEach(pt => ctx.lineTo(...pt))
-    ctx.lineTo(...firstPoint)
-
+    const [left, top, w, h] = tileGeometries[i]
     ctx.fillStyle = tileColor
     ctx.strokeStyle = '#666666'
-    ctx.fill()
-    ctx.stroke()
+    ctx.fillRect(left, top, w, h)
+    ctx.strokeRect(left, top, w, h)
   }
 
   if (selectedTile !== null) {
-    const [firstPoint, ...points] = tileGeometries[selectedTile]
+    const [left, top, w, h] = tileGeometries[selectedTile]
 
     const gradientDirection = selectedSide === 'right'
-      ? [firstPoint[0], firstPoint[1], points[0][0], firstPoint[1]]
-      : [points[0][0], firstPoint[1], firstPoint[0], firstPoint[1]]
+      ? [left, top, left + w, top]
+      : [left + w, top, left, top]
     const gradient = ctx.createLinearGradient(...gradientDirection)
     gradient.addColorStop(0, 'rgba(255, 255, 255, 0)')
     gradient.addColorStop(0.5, 'rgba(255, 255, 255, 0)')
@@ -145,12 +128,7 @@ function renderTiles (canvas, tiles, colors, tileGeometries, selectedTile, selec
     gradient.addColorStop(1, 'rgba(255, 255, 255, 0.9)')
 
     ctx.fillStyle = gradient
-    ctx.lineWidth = 3
-    ctx.beginPath()
-    ctx.moveTo(...firstPoint)
-    points.forEach(pt => ctx.lineTo(...pt))
-    ctx.lineTo(...firstPoint)
-    ctx.fill()
+    ctx.fillRect(left, top, w, h)
   }
   ctx.restore()
 }
