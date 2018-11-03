@@ -92,13 +92,13 @@ function pivit () {
     if (selectedTile === null) {
       return
     }
-    let selected, remainder, firstTile, lastTile, onComplete
+    let selected, remainder, firstTile, lastTile, finalize
     if (selectedSide === 'left') {
       selected = tiles.slice(selectedTile).reverse()
       remainder = tiles.slice(0, selectedTile)
       firstTile = selectedTile
       lastTile = tiles.length - 1
-      onComplete = () => {
+      finalize = () => {
         tiles = [...remainder, ...selected]
       }
     } else {
@@ -106,7 +106,7 @@ function pivit () {
       remainder = tiles.slice(selectedTile + 1)
       firstTile = 0
       lastTile = selectedTile
-      onComplete = () => {
+      finalize = () => {
         tiles = [...selected, ...remainder]
       }
     }
@@ -122,21 +122,33 @@ function pivit () {
         ctx.translate(-cx, -cy)
       }
     }
-    runTransformationAnimation(onComplete)
+    runTransformationAnimation(0.5, () => {
+      finalize()
+      for (let i = firstTile; i <= lastTile; i++) {
+        tileTransformations[i] = (ctx, pct) => {
+          ctx.translate(cx, cy)
+          ctx.scale(1, 2 * (pct - 0.5))
+          ctx.translate(-cx, -cy)
+        }
+      }
+      runTransformationAnimation(0.5)
+    })
   }
 
-  function runTransformationAnimation (onComplete) {
+  function runTransformationAnimation (portion = 1, onComplete) {
     animationTime = 0
     render()
     const pctStep = 1 / animationSteps
-    const interval = animationDuration / animationSteps
+    const interval = (portion * animationDuration) / animationSteps
     const timer = setInterval(() => {
       animationTime += pctStep
       if (animationTime >= 1.0) {
         clearInterval(timer)
         tileTransformations.fill(null)
         animationTime = null
-        onComplete()
+        if (onComplete) {
+          onComplete()
+        }
       }
       render()
     }, interval)
