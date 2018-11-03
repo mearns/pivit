@@ -1,8 +1,7 @@
 function pivit () {
   const canvas = document.getElementById('pivit')
 
-  // const tiles = [3, 1, 2, 4, 9, 6, 8, 0, 5, 7]
-  const tiles = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+  let tiles = [3, 1, 2, 4, 9, 6, 8, 0, 5, 7]
   const colors = [
     '#ff0000',
     '#ff8822',
@@ -46,10 +45,12 @@ function pivit () {
     window.requestAnimationFrame(() => renderTiles(canvas, tiles, colors, tileGeometries, selectedTile, selectedSide))
   }
 
-  canvas.addEventListener('mousemove', event => {
+  function calculateSelections (event) {
     const rect = canvas.getBoundingClientRect()
     const x = event.clientX - rect.left
-    const y = event.clientY - rect.top
+    selectedTile = null
+    selectedSide = null
+    // const y = event.clientY - rect.top
     for (let i = 0; i < tileGeometries.length; i++) {
       // FIXME: proper collision detection for non-rectangles
       const tileLeft = tileGeometries[i][0][0]
@@ -63,12 +64,37 @@ function pivit () {
         selectedTile = i
       }
     }
+  }
+
+  function reverseSelection () {
+    if (selectedTile === null) {
+      return
+    }
+    if (selectedSide === 'left') {
+      const selected = tiles.slice(selectedTile).reverse()
+      const remainder = tiles.slice(0, selectedTile)
+      tiles = [...remainder, ...selected]
+    } else {
+      const selected = tiles.slice(0, selectedTile + 1).reverse()
+      const remainder = tiles.slice(selectedTile + 1)
+      tiles = [...selected, ...remainder]
+    }
+    render()
+  }
+
+  canvas.addEventListener('mousemove', event => {
+    calculateSelections(event)
     render()
   })
 
   canvas.addEventListener('mouseout', () => {
     selectedTile = null
     render()
+  })
+
+  canvas.addEventListener('click', event => {
+    calculateSelections(event)
+    reverseSelection()
   })
 
   render()
