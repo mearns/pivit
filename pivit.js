@@ -37,10 +37,9 @@ function pivit () {
   let animationTime = null
   let selectedTile = null
   let selectedSide = null
-  let rotate = false
 
   function render () {
-    window.requestAnimationFrame(() => renderTiles(canvas, tiles, colors, tileGeometries, tileTransformations, animationTime, selectedTile, selectedSide, rotate))
+    window.requestAnimationFrame(() => renderTiles(canvas, tiles, colors, tileGeometries, tileTransformations, animationTime, selectedTile, selectedSide))
   }
 
   function calculateSelections (event) {
@@ -105,11 +104,13 @@ function pivit () {
       animationTime += step
       render()
       if (animationTime >= 1.0) {
+        clearInterval(timer)
         for (let i = firstTile; i <= lastTile; i++) {
           tileTransformations[i] = null
         }
-        clearInterval(timer)
+        animationTime = null
         onComplete()
+        render()
       }
     }, 10)
   }
@@ -125,10 +126,11 @@ function pivit () {
   })
 
   canvas.addEventListener('click', event => {
-    rotate = true
-    calculateSelections(event)
-    reverseSelection()
-    render()
+    if (animationTime === null) {
+      calculateSelections(event)
+      reverseSelection()
+      render()
+    }
   })
 
   render()
@@ -157,7 +159,7 @@ function renderTiles (canvas, tiles, colors, tileGeometries, tileTransformations
     ctx.restore()
   }
 
-  if (selectedTile !== null) {
+  if (selectedTile !== null && animationTime === null) {
     const [left, top, w, h] = tileGeometries[selectedTile]
 
     const gradientDirection = selectedSide === 'right'
