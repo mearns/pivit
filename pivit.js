@@ -33,22 +33,14 @@ function pivit () {
     }
   }
   updateTileGeometries()
-  const firstTile = tileGeometries[0]
-  tileTransformations[0] = (ctx) => {
-    const [x, y, w, h] = firstTile
-    const tx = x + w / 2
-    const ty = y + h / 2
-    ctx.translate(tx, ty)
-    ctx.rotate(Math.PI / 4)
-    ctx.translate(-tx, -ty)
-  }
 
+  let animationTime = null
   let selectedTile = null
   let selectedSide = null
   let rotate = false
 
   function render () {
-    window.requestAnimationFrame(() => renderTiles(canvas, tiles, colors, tileGeometries, tileTransformations, selectedTile, selectedSide, rotate))
+    window.requestAnimationFrame(() => renderTiles(canvas, tiles, colors, tileGeometries, tileTransformations, animationTime, selectedTile, selectedSide, rotate))
   }
 
   function calculateSelections (event) {
@@ -75,15 +67,51 @@ function pivit () {
     if (selectedTile === null) {
       return
     }
+    let selected, remainder, firstTile, lastTile, onComplete
     if (selectedSide === 'left') {
-      const selected = tiles.slice(selectedTile).reverse()
-      const remainder = tiles.slice(0, selectedTile)
-      tiles = [...remainder, ...selected]
+      selected = tiles.slice(selectedTile).reverse()
+      remainder = tiles.slice(0, selectedTile)
+      firstTile = selectedTile
+      lastTile = tiles.length - 1
+      onComplete = () => {
+        tiles = [...remainder, ...selected]
+      }
     } else {
-      const selected = tiles.slice(0, selectedTile + 1).reverse()
-      const remainder = tiles.slice(selectedTile + 1)
-      tiles = [...selected, ...remainder]
+      selected = tiles.slice(0, selectedTile + 1).reverse()
+      remainder = tiles.slice(selectedTile + 1)
+      firstTile = 0
+      lastTile = selectedTile
+      onComplete = () => {
+        tiles = [...selected, ...remainder]
+      }
     }
+    const [left, top, ignore1, h] = tileGeometries[firstTile]
+    const [nearRight, ignore2, w] = tileGeometries[lastTile]
+    const right = nearRight + w
+    const cx = (left + right) / 2
+    const cy = top + (h / 2)
+    for (let i = firstTile; i <= lastTile; i++) {
+      tileTransformations[i] = (ctx, pct) => {
+        ctx.translate(cx, cy)
+        ctx.rotate(pct * Math.PI)
+        ctx.translate(-cx, -cy)
+      }
+    }
+
+    animationTime = 0
+    render()
+    const step = 1 / 50
+    const timer = setInterval(() => {
+      animationTime += step
+      render()
+      if (animationTime >= 1.0) {
+        for (let i = firstTile; i <= lastTile; i++) {
+          tileTransformations[i] = null
+        }
+        clearInterval(timer)
+        onComplete()
+      }
+    }, 10)
   }
 
   canvas.addEventListener('mousemove', event => {
@@ -106,7 +134,7 @@ function pivit () {
   render()
 }
 
-function renderTiles (canvas, tiles, colors, tileGeometries, tileTransformations, selectedTile, selectedSide, rotate) {
+function renderTiles (canvas, tiles, colors, tileGeometries, tileTransformations, animationTime, selectedTile, selectedSide) {
   const ctx = canvas.getContext('2d')
   const width = canvas.width
   const height = canvas.height
@@ -120,7 +148,7 @@ function renderTiles (canvas, tiles, colors, tileGeometries, tileTransformations
     const xformer = tileTransformations[i]
     ctx.save()
     if (xformer) {
-      xformer(ctx)
+      xformer(ctx, animationTime)
     }
     ctx.fillStyle = tileColor
     ctx.strokeStyle = '#666666'
