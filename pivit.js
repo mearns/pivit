@@ -23,6 +23,7 @@ function pivit () {
   const tileHeight = height - vPad - vPad
 
   const tileGeometries = new Array(tiles.length)
+  const tileTransformations = new Array(tiles.length)
   function updateTileGeometries () {
     let x = hPad
     let y = vPad
@@ -32,13 +33,22 @@ function pivit () {
     }
   }
   updateTileGeometries()
+  const firstTile = tileGeometries[0]
+  tileTransformations[0] = (ctx) => {
+    const [x, y, w, h] = firstTile
+    const tx = x + w / 2
+    const ty = y + h / 2
+    ctx.translate(tx, ty)
+    ctx.rotate(Math.PI / 4)
+    ctx.translate(-tx, -ty)
+  }
 
   let selectedTile = null
   let selectedSide = null
   let rotate = false
 
   function render () {
-    window.requestAnimationFrame(() => renderTiles(canvas, tiles, colors, tileGeometries, selectedTile, selectedSide, rotate))
+    window.requestAnimationFrame(() => renderTiles(canvas, tiles, colors, tileGeometries, tileTransformations, selectedTile, selectedSide, rotate))
   }
 
   function calculateSelections (event) {
@@ -96,23 +106,27 @@ function pivit () {
   render()
 }
 
-function renderTiles (canvas, tiles, colors, tileGeometries, selectedTile, selectedSide, rotate) {
+function renderTiles (canvas, tiles, colors, tileGeometries, tileTransformations, selectedTile, selectedSide, rotate) {
   const ctx = canvas.getContext('2d')
   const width = canvas.width
   const height = canvas.height
   ctx.clearRect(0, 0, width, height)
 
-  ctx.save()
   ctx.lineWidth = 1
   for (let i = 0; i < tiles.length; i++) {
     const tile = tiles[i]
     const tileColor = colors[tile]
-
     const [left, top, w, h] = tileGeometries[i]
+    const xformer = tileTransformations[i]
+    ctx.save()
+    if (xformer) {
+      xformer(ctx)
+    }
     ctx.fillStyle = tileColor
     ctx.strokeStyle = '#666666'
     ctx.fillRect(left, top, w, h)
     ctx.strokeRect(left, top, w, h)
+    ctx.restore()
   }
 
   if (selectedTile !== null) {
@@ -130,5 +144,4 @@ function renderTiles (canvas, tiles, colors, tileGeometries, selectedTile, selec
     ctx.fillStyle = gradient
     ctx.fillRect(left, top, w, h)
   }
-  ctx.restore()
 }
