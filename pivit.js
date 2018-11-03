@@ -1,6 +1,8 @@
 function pivit () {
   const canvas = document.getElementById('pivit')
 
+  const animationDuration = 200
+  const animationSteps = 20
   let tiles = [3, 1, 2, 4, 9, 6, 8, 0, 5, 7]
   const colors = [
     '#ff0000',
@@ -102,9 +104,10 @@ function pivit () {
   function runTransformationAnimation (onComplete) {
     animationTime = 0
     render()
-    const step = 1 / 50
+    const pctStep = 1 / animationSteps
+    const interval = animationDuration / animationSteps
     const timer = setInterval(() => {
-      animationTime += step
+      animationTime += pctStep
       if (animationTime >= 1.0) {
         clearInterval(timer)
         tileTransformations.fill(null)
@@ -112,7 +115,7 @@ function pivit () {
         onComplete()
       }
       render()
-    }, 10)
+    }, interval)
   }
 
   canvas.addEventListener('mousemove', event => {
