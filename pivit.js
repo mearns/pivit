@@ -15,10 +15,30 @@ function pivit () {
     '#8800ff',
     '#ff00ff'
   ]
-  renderTiles(canvas, tiles, colors)
+  let cursorPosition = null
+
+  function render () {
+    renderTiles(canvas, tiles, colors, cursorPosition)
+  }
+
+  canvas.addEventListener('mousemove', event => {
+    const rect = canvas.getBoundingClientRect()
+    cursorPosition = {
+      x: event.clientX - rect.left,
+      y: event.clientY - rect.top
+    }
+    render()
+  })
+
+  canvas.addEventListener('mouseout', () => {
+    cursorPosition = null
+    render()
+  })
+
+  render()
 }
 
-function renderTiles (canvas, tiles, colors) {
+function renderTiles (canvas, tiles, colors, cursorPosition) {
   const ctx = canvas.getContext('2d')
   const width = canvas.width
   const height = canvas.height
@@ -27,15 +47,55 @@ function renderTiles (canvas, tiles, colors) {
   const tileWidth = (width - hPad - hPad) / tiles.length
   const tileHeight = height - vPad - vPad
 
+  const tileGeometries = new Array(tiles.length)
+  let selectedTile = null
+  let selectedSide;
   let x = hPad
   let y = vPad
+  ctx.lineWidth = 1
   for (let i = 0; i < tiles.length; i++) {
     const tile = tiles[i]
     const tileColor = colors[tile]
     ctx.fillStyle = tileColor
-    ctx.strokeStyle = '#666666'
     ctx.fillRect(x, y, tileWidth, tileHeight)
+    ctx.strokeStyle = '#666666'
     ctx.strokeRect(x, y, tileWidth, tileHeight)
+    tileGeometries[i] = [
+      [x, y],
+      [x + tileWidth, y],
+      [x + tileWidth, y + tileHeight],
+      [x, y + tileHeight]
+    ]
+    if (cursorPosition && cursorPosition.x >= x && cursorPosition.x < x + tileWidth) {
+      if (cursorPosition.x < x + tileWidth / 2) {
+        selectedSide = 'left'
+      } else {
+        selectedSide = 'right'
+      }
+      selectedTile = i
+    }
+
     x += tileWidth
+  }
+
+  if (selectedTile !== null) {
+    const [firstPoint, ...points] = tileGeometries[selectedTile]
+
+    const gradientDirection = selectedSide === 'right'
+      ? [firstPoint[0], firstPoint[1], points[0][0], firstPoint[1]]
+      : [points[0][0], firstPoint[1], firstPoint[0], firstPoint[1]]
+    const gradient = ctx.createLinearGradient(...gradientDirection)
+    gradient.addColorStop(0, 'rgba(255, 255, 255, 0)')
+    gradient.addColorStop(0.5, 'rgba(255, 255, 255, 0)')
+    gradient.addColorStop(0.9, 'rgba(255, 255, 255, 0.9')
+    gradient.addColorStop(1, 'rgba(255, 255, 255, 0.9)')
+
+    ctx.fillStyle = gradient
+    ctx.lineWidth = 3
+    ctx.beginPath()
+    ctx.moveTo(...firstPoint)
+    points.forEach(pt => ctx.lineTo(...pt))
+    ctx.lineTo(...firstPoint)
+    ctx.fill()
   }
 }
