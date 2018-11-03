@@ -13,8 +13,7 @@ function randomizeTiles (count) {
 }
 
 function pivit () {
-
-  const animationDuration = 200
+  const animationDuration = 800
   const animationSteps = 20
   const colors = [
     '#ff0000',
@@ -180,9 +179,16 @@ function renderTiles (canvas, tiles, colors, tileGeometries, tileTransformations
     if (xformer) {
       xformer(ctx, animationTime)
     }
+
+    const gradient = ctx.createLinearGradient(left, top, left, top + h)
+    gradient.addColorStop(0.5, 'rgba(255, 255, 255, 0)')
+    gradient.addColorStop(0.9, 'rgba(255, 255, 255, 0.75)')
+
     ctx.fillStyle = tileColor
-    ctx.strokeStyle = '#666666'
     ctx.fillRect(left, top, w, h)
+    ctx.fillStyle = gradient
+    ctx.fillRect(left, top, w, h)
+    ctx.strokeStyle = '#666666'
     ctx.strokeRect(left, top, w, h)
     ctx.restore()
   }
