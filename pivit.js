@@ -92,7 +92,7 @@ function pivit () {
     if (selectedTile === null) {
       return
     }
-    let selected, remainder, firstTile, lastTile, finalize
+    let selected, remainder, firstTile, lastTile, finalize, rotationDir = 1
     if (selectedSide === 'left') {
       selected = tiles.slice(selectedTile).reverse()
       remainder = tiles.slice(0, selectedTile)
@@ -106,6 +106,7 @@ function pivit () {
       remainder = tiles.slice(selectedTile + 1)
       firstTile = 0
       lastTile = selectedTile
+      rotationDir = -1
       finalize = () => {
         tiles = [...selected, ...remainder]
       }
@@ -118,7 +119,7 @@ function pivit () {
     for (let i = firstTile; i <= lastTile; i++) {
       tileTransformations[i] = (ctx, pct) => {
         ctx.translate(cx, cy)
-        ctx.rotate(pct * Math.PI)
+        ctx.rotate(pct * rotationDir * Math.PI)
         ctx.translate(-cx, -cy)
       }
     }
