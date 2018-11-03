@@ -40,9 +40,10 @@ function pivit () {
 
   let selectedTile = null
   let selectedSide = null
+  let rotate = false
 
   function render () {
-    window.requestAnimationFrame(() => renderTiles(canvas, tiles, colors, tileGeometries, selectedTile, selectedSide))
+    window.requestAnimationFrame(() => renderTiles(canvas, tiles, colors, tileGeometries, selectedTile, selectedSide, rotate))
   }
 
   function calculateSelections (event) {
@@ -79,7 +80,6 @@ function pivit () {
       const remainder = tiles.slice(selectedTile + 1)
       tiles = [...selected, ...remainder]
     }
-    render()
   }
 
   canvas.addEventListener('mousemove', event => {
@@ -93,18 +93,27 @@ function pivit () {
   })
 
   canvas.addEventListener('click', event => {
+    rotate = true
     calculateSelections(event)
     reverseSelection()
+    render()
   })
 
   render()
 }
 
-function renderTiles (canvas, tiles, colors, tileGeometries, selectedTile, selectedSide) {
+function renderTiles (canvas, tiles, colors, tileGeometries, selectedTile, selectedSide, rotate) {
   const ctx = canvas.getContext('2d')
   const width = canvas.width
   const height = canvas.height
   ctx.clearRect(0, 0, width, height)
+
+  ctx.save()
+  ctx.translate(...tileGeometries[3][0])
+  if (rotate) {
+    ctx.rotate(Math.PI / 3)
+  }
+  ctx.translate(-tileGeometries[3][0][0], -tileGeometries[3][0][1])
 
   ctx.lineWidth = 1
   for (let i = 0; i < tiles.length; i++) {
@@ -143,4 +152,5 @@ function renderTiles (canvas, tiles, colors, tileGeometries, selectedTile, selec
     ctx.lineTo(...firstPoint)
     ctx.fill()
   }
+  ctx.restore()
 }
