@@ -1,9 +1,22 @@
+function randomizeTiles (count) {
+  const options = new Array(count)
+  const tiles = new Array(count)
+  for (let i = 0; i < count; i++) {
+    options[i] = i
+  }
+  for (let i = 0; i < count; i++) {
+    const r = parseInt(Math.random() * options.length)
+    const [tile] = options.splice(r, 1)
+    tiles[i] = tile
+  }
+  return tiles
+}
+
 function pivit () {
   const canvas = document.getElementById('pivit')
 
   const animationDuration = 200
   const animationSteps = 20
-  let tiles = [3, 1, 2, 4, 9, 6, 8, 0, 5, 7]
   const colors = [
     '#ff0000',
     '#ff8822',
@@ -16,6 +29,7 @@ function pivit () {
     '#8800ff',
     '#ff00ff'
   ]
+  let tiles = randomizeTiles(colors.length)
 
   const width = canvas.width
   const height = canvas.height
