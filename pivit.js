@@ -13,7 +13,6 @@ function randomizeTiles (count) {
 }
 
 function pivit () {
-  const canvas = document.getElementById('pivit')
 
   const animationDuration = 200
   const animationSteps = 20
@@ -31,15 +30,9 @@ function pivit () {
   ]
   let tiles = randomizeTiles(colors.length)
 
-  const width = canvas.width
-  const height = canvas.height
-  const hPad = width / 5
-  const vPad = 2 * (height / 5)
-  const tileWidth = (width - hPad - hPad) / tiles.length
-  const tileHeight = height - vPad - vPad
-
   const tileGeometries = new Array(tiles.length)
   const tileTransformations = new Array(tiles.length)
+  let hPad, vPad, tileWidth, tileHeight
   function updateTileGeometries () {
     let x = hPad
     let y = vPad
@@ -48,7 +41,25 @@ function pivit () {
       x += tileWidth
     }
   }
-  updateTileGeometries()
+
+  const canvas = document.getElementById('pivit')
+  const parentEl = canvas.parentElement
+  function fitToWindow () {
+    document.body.style.height = window.innerHeight + 'px'
+    canvas.width = 0.95 * parentEl.clientWidth
+    canvas.height = 0.95 * parentEl.clientHeight
+
+    const width = canvas.width
+    const height = canvas.height
+    hPad = width / 5
+    vPad = 2 * (height / 5)
+    tileWidth = (width - hPad - hPad) / tiles.length
+    tileHeight = height - vPad - vPad
+    updateTileGeometries()
+    render()
+  }
+  window.addEventListener('resize', fitToWindow)
+  fitToWindow()
 
   let animationTime = null
   let selectedTile = null
