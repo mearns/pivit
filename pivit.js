@@ -15,31 +15,7 @@ function pivit () {
     '#8800ff',
     '#ff00ff'
   ]
-  let cursorPosition = null
 
-  function render () {
-    renderTiles(canvas, tiles, colors, cursorPosition)
-  }
-
-  canvas.addEventListener('mousemove', event => {
-    const rect = canvas.getBoundingClientRect()
-    cursorPosition = {
-      x: event.clientX - rect.left,
-      y: event.clientY - rect.top
-    }
-    render()
-  })
-
-  canvas.addEventListener('mouseout', () => {
-    cursorPosition = null
-    render()
-  })
-
-  render()
-}
-
-function renderTiles (canvas, tiles, colors, cursorPosition) {
-  const ctx = canvas.getContext('2d')
   const width = canvas.width
   const height = canvas.height
   const hPad = width / 5
@@ -48,34 +24,77 @@ function renderTiles (canvas, tiles, colors, cursorPosition) {
   const tileHeight = height - vPad - vPad
 
   const tileGeometries = new Array(tiles.length)
+  function updateTileGeometries () {
+    let x = hPad
+    let y = vPad
+    for (let i = 0; i < tiles.length; i++) {
+      tileGeometries[i] = [
+        [x, y],
+        [x + tileWidth, y],
+        [x + tileWidth, y + tileHeight],
+        [x, y + tileHeight]
+      ]
+      x += tileWidth
+    }
+  }
+  updateTileGeometries()
+
   let selectedTile = null
-  let selectedSide;
-  let x = hPad
-  let y = vPad
+  let selectedSide = null
+
+  function render () {
+    renderTiles(canvas, tiles, colors, tileGeometries, selectedTile, selectedSide)
+  }
+
+  canvas.addEventListener('mousemove', event => {
+    const rect = canvas.getBoundingClientRect()
+    const x = event.clientX - rect.left
+    const y = event.clientY - rect.top
+    for (let i = 0; i < tileGeometries.length; i++) {
+      // FIXME: proper collision detection for non-rectangles
+      const tileLeft = tileGeometries[i][0][0]
+      const tileRight = tileGeometries[i][1][0]
+      if (x >= tileLeft && x < tileRight) {
+        if (x < tileLeft + tileWidth / 2) {
+          selectedSide = 'left'
+        } else {
+          selectedSide = 'right'
+        }
+        selectedTile = i
+      }
+    }
+    render()
+  })
+
+  canvas.addEventListener('mouseout', () => {
+    selectedTile = null
+    render()
+  })
+
+  render()
+}
+
+function renderTiles (canvas, tiles, colors, tileGeometries, selectedTile, selectedSide) {
+  const ctx = canvas.getContext('2d')
+  const width = canvas.width
+  const height = canvas.height
+  ctx.clearRect(0, 0, width, height)
+
   ctx.lineWidth = 1
   for (let i = 0; i < tiles.length; i++) {
     const tile = tiles[i]
     const tileColor = colors[tile]
-    ctx.fillStyle = tileColor
-    ctx.fillRect(x, y, tileWidth, tileHeight)
-    ctx.strokeStyle = '#666666'
-    ctx.strokeRect(x, y, tileWidth, tileHeight)
-    tileGeometries[i] = [
-      [x, y],
-      [x + tileWidth, y],
-      [x + tileWidth, y + tileHeight],
-      [x, y + tileHeight]
-    ]
-    if (cursorPosition && cursorPosition.x >= x && cursorPosition.x < x + tileWidth) {
-      if (cursorPosition.x < x + tileWidth / 2) {
-        selectedSide = 'left'
-      } else {
-        selectedSide = 'right'
-      }
-      selectedTile = i
-    }
 
-    x += tileWidth
+    const [firstPoint, ...points] = tileGeometries[i]
+    ctx.beginPath()
+    ctx.moveTo(...firstPoint)
+    points.forEach(pt => ctx.lineTo(...pt))
+    ctx.lineTo(...firstPoint)
+
+    ctx.fillStyle = tileColor
+    ctx.strokeStyle = '#666666'
+    ctx.fill()
+    ctx.stroke()
   }
 
   if (selectedTile !== null) {
