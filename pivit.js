@@ -13,7 +13,7 @@ function randomizeTiles (count) {
 }
 
 function pivit () {
-  const animationDuration = 800
+  const animationDuration = 300
   const animationSteps = 20
   const colors = [
     '#ff0000',
@@ -123,7 +123,7 @@ function pivit () {
         ctx.translate(-cx, -cy)
       }
     }
-    runTransformationAnimation(0.5, () => {
+    runTransformationAnimation(0.70, () => {
       finalize()
       for (let i = firstTile; i <= lastTile; i++) {
         tileTransformations[i] = (ctx, pct) => {
@@ -132,7 +132,7 @@ function pivit () {
           ctx.translate(-cx, -cy)
         }
       }
-      runTransformationAnimation(0.5)
+      runTransformationAnimation(0.30)
     })
   }
 
