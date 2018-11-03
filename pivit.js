@@ -96,22 +96,22 @@ function pivit () {
         ctx.translate(-cx, -cy)
       }
     }
+    runTransformationAnimation(onComplete)
+  }
 
+  function runTransformationAnimation (onComplete) {
     animationTime = 0
     render()
     const step = 1 / 50
     const timer = setInterval(() => {
       animationTime += step
-      render()
       if (animationTime >= 1.0) {
         clearInterval(timer)
-        for (let i = firstTile; i <= lastTile; i++) {
-          tileTransformations[i] = null
-        }
+        tileTransformations.fill(null)
         animationTime = null
         onComplete()
-        render()
       }
+      render()
     }, 10)
   }
 
