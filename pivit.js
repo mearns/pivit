@@ -43,7 +43,7 @@ function pivit () {
   let selectedSide = null
 
   function render () {
-    renderTiles(canvas, tiles, colors, tileGeometries, selectedTile, selectedSide)
+    window.requestAnimationFrame(() => renderTiles(canvas, tiles, colors, tileGeometries, selectedTile, selectedSide))
   }
 
   canvas.addEventListener('mousemove', event => {
