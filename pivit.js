@@ -28,6 +28,16 @@ function pivit () {
     '#ff00ff'
   ]
   let tiles = randomizeTiles(colors.length)
+  let win = false
+
+  function checkForWin () {
+    for (let i = 0; i < tiles.length; i++) {
+      if (tiles[i] !== i) {
+        return
+      }
+    }
+    win = true
+  }
 
   const tileGeometries = new Array(tiles.length)
   const tileTransformations = new Array(tiles.length)
@@ -65,7 +75,7 @@ function pivit () {
   let selectedSide = null
 
   function render () {
-    window.requestAnimationFrame(() => renderTiles(canvas, tiles, colors, tileGeometries, tileTransformations, animationTime, selectedTile, selectedSide))
+    window.requestAnimationFrame(() => renderTiles(canvas, tiles, colors, tileGeometries, tileTransformations, animationTime, selectedTile, selectedSide, win))
   }
 
   function calculateSelections (event) {
@@ -150,6 +160,7 @@ function pivit () {
         if (onComplete) {
           onComplete()
         }
+        checkForWin()
       }
       render()
     }, interval)
@@ -176,7 +187,7 @@ function pivit () {
   render()
 }
 
-function renderTiles (canvas, tiles, colors, tileGeometries, tileTransformations, animationTime, selectedTile, selectedSide) {
+function renderTiles (canvas, tiles, colors, tileGeometries, tileTransformations, animationTime, selectedTile, selectedSide, win) {
   const ctx = canvas.getContext('2d')
   const width = canvas.width
   const height = canvas.height
